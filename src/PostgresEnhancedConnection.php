@@ -205,4 +205,25 @@ class PostgresEnhancedConnection extends PostgresConnection
 
         return parent::run($query, $bindings, $callback);
     }
+    
+    /**
+     * Modify the bindValues function to cater for Bytea
+     * 
+     * @param \PDOStatement $statement
+     * @param Array $bindings
+     * @return void
+     */
+    public function bindValues($statement, $bindings)
+    {
+        foreach ($bindings as $key => $value) {
+            $statement->bindValue(
+                is_string($key) ? $key : $key + 1,
+                $value,
+                is_int($value) || is_float($value) ?
+                    PDO::PARAM_INT :
+                    ($value === null || ctype_print($value) ? PDO::PARAM_STR :
+                    PDO::PARAM_LOB)
+            );
+        }
+    }
 }
